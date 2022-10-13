@@ -16,13 +16,12 @@ playButton.addEventListener('click', function () {
 
 }, false);
 
-    
-
 
 function initAudio(){
 
-    audioCtx = new (window.AudioContext || window.webkitAudioContext)
+    audioCtx = new AudioContext()
     
+    //brown noise
     var bufferSize = 10 * audioCtx.sampleRate,
     noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate),
     output = noiseBuffer.getChannelData(0);
@@ -39,27 +38,34 @@ function initAudio(){
     brownNoise = audioCtx.createBufferSource();
     brownNoise.buffer = noiseBuffer;
     brownNoise.loop = true;
-    brownNoise.start(0); 
-
-
+    brownNoise.start(0);
+    
     const input = audioCtx.createBiquadFilter()
     const freq = audioCtx.createBiquadFilter()
     const brook = audioCtx.createBiquadFilter()
     
+    const totalGain = audioCtx.createGain();
+    totalGain.gain.value = 0.1;
+
+    const freqGain = audioCtx.createGain();
+    freqGain.gain.value = 400;
+
     input.type = 'lowpass'
-    input.frequency.setValueAtTime(400, audioCtx.currentTime);
-    
+    input.frequency.value = 400;
     
     freq.type = 'lowpass'
-    freq.frequency.setValueAtTime(14, audioCtx.currentTime);
+    freq.frequency.value = 14;
+    const helper = new ConstantSourceNode(audioCtx, {offset: 500})
+    helper.connect(freq)
     
-    const friend = new ConstantSourceNode(audioCtx, {offset: 400})
     brook.type = 'highpass'
-    brook.frequency = brownNoise.connect(freq) * friend + 500;
-    brook.Q = 0.03;
-    
+    brook.Q.value = 1/0.03;
 
-    brownNoise.connect(input).connect(brook).connect(audioCtx.destination);
     
+    brownNoise.connect(input).connect(brook)
+    brownNoise.connect(freq).connect(freqGain).connect(brook.frequency)
+    
+    brook.connect(totalGain).connect(audioCtx.destination);
+
 
 }
