@@ -70,7 +70,7 @@ function dial(){
 
 
 function brook(){
-
+    //this first part I worked with Gabrielle D'Agostino and Chang Su Nam
     audioCtx1 = new AudioContext()
 
     //brown noise
